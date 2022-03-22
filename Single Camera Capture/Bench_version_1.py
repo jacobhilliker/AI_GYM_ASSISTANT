@@ -18,6 +18,8 @@ ptime = 0
 color_red = (0, 0, 255)
 color_green = (0, 255, 0)
 color_yellow = (0, 255, 255)
+color_black = (0,0,0)
+color_white = (255,255,255)
 good_count = 0
 direction = 0
 count = 0
@@ -33,6 +35,8 @@ tracker = cv2.TrackerCSRT_create()
 
 # Capture the video feed
 cap = cv2.VideoCapture(0)
+#cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+#cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 # Run the code for plotting
 _thread.start_new_thread(graph_plot, ())
@@ -71,6 +75,7 @@ while cap.isOpened():
         pass
 
     ok, img = cap.read()
+    
 
     timer = cv2.getTickCount()
 
@@ -119,13 +124,76 @@ while cap.isOpened():
 
         if len(lmlist) != 0:
 
+
+            # finding elbow
+            point_elbow = findpositions(11, 13, 15, lmlist)
+            angle_elbow = calculate_angle(point_elbow)
+
+            if angle_elbow < 20:
+                color_elbow = color_green
+            elif angle_elbow < 40:
+                color_elbow = color_yellow
+            else:
+                color_elbow = color_red
+            
+            #plote = plot(point_elbow, color_elbow, angle_elbow, img)
+
+            # finding shoulder
+            point_shoulder = findpositions(23, 11, 13, lmlist)
+            angle_shoulder = calculate_angle(point_shoulder)
+
+            if angle_shoulder < 20:
+                color_shoulder = color_green
+            elif angle_shoulder < 40:
+                color_shoulder = color_yellow
+            else:
+                color_shoulder = color_red
+            
+            #plots = plot(point_shoulder, color_shoulder, angle_shoulder, img)
+
+
+            # FOREARM ANGLE
+            ###############
+
+            # forearm should be vertical
+            # forearm is line segment from 13 to 15
+            forearm_line = get_line_segment(13, 15, lmlist)
+
+            # calculate slope of arm
+            # slope should be very large
+            rise = forearm_line[1][1] - forearm_line[0][1]
+            run = forearm_line[1][0] - forearm_line[0][0]
+            if run == 0:
+                run = 0.0001
+            slope = rise/run
+            slope = abs(round(slope))
+
+            # angle limits
+            if slope > 6:
+                color_forearm = color_green
+            elif slope > 3:
+                color_forearm = color_yellow
+            else:
+                color_forearm = color_red
+
+            # plot
+            plot_forearm = plot_line(forearm_line[0], forearm_line[1], color_forearm, img)
+            #forearm_midpoint = (round((forearm_line[1][0] + forearm_line[0][0]) / 2), round((forearm_line[1][1] + forearm_line[0][1]) / 2))
+            forearm_midpoint = get_midpoint(forearm_line)
+
+            plot_forearm_angle = plot_label(forearm_midpoint, slope, color_black, img)
+
+            ################
+
+
             # Calculate angle back
             point_back = findpositions(11, 23, 25, lmlist)
             angle_back = calculate_angle(point_back)
+            
 
-            if angle_back < 125:  # EXPERT ADVICE
+            if angle_back > 160:  # EXPERT ADVICE
                 color_back = color_green
-            elif 135 > angle_back > 120:  # EXPERT ADVICE
+            elif angle_back > 140:  # EXPERT ADVICE
                 color_back = color_yellow
             else:
                 color_back = color_red
@@ -142,28 +210,48 @@ while cap.isOpened():
             angle_knee = calculate_angle(point_knee)
             knee_position = point_knee[1][0]
 
-            point_toe = findpositions(25, 27, 31, lmlist)
-            angle_toe = calculate_angle(point_toe)
-            toe_position = point_knee[2][0]
+
+            # knee angle should be 90 or a bit less
+            knee_upper_limit_good = 90
+            knee_lower_limit_good = 50
+            knee_upper_limit = 110
+            knee_lower_limit = 40
+            if angle_knee < knee_upper_limit_good and angle_knee > knee_lower_limit_good:
+                color_knee = color_green
+            elif angle_knee < knee_upper_limit and angle_knee > knee_lower_limit:
+                color_knee = color_yellow
+            else:
+                color_knee = color_red
+            
+            plot_knee = plot(point_knee, color_knee, angle_knee, img)
+            plot_knee2 = plot_label(find_point_position(25, lmlist), round(angle_knee), color_black, img)
+
+            #point_toe = findpositions(25, 27, 31, lmlist)
+            #angle_toe = calculate_angle(point_toe)
+            #toe_position = point_knee[2][0]
 
             # Calculating knee overflow through foot distance
-            ankle = find_point_position(27, lmlist)
-            toe = find_point_position(31, lmlist)
-            foot_length = int(math.sqrt((ankle[0] - toe[0]) ** 2 + (ankle[1] - toe[1]) ** 2))
+            #ankle = find_point_position(27, lmlist)
+            #toe = find_point_position(31, lmlist)
+            #foot_length = int(math.sqrt((ankle[0] - toe[0]) ** 2 + (ankle[1] - toe[1]) ** 2))
 
-            distance_knee_toe = abs(knee_position - toe_position)
+            #distance_knee_toe = abs(knee_position - toe_position)
 
+            """
             if distance_knee_toe < 1.1 * foot_length:  # EXPERT ADVICE
                 color_knee = color_green
             elif distance_knee_toe < 1.3 * foot_length:  # EXPERT ADVICE
                 color_knee = color_yellow
             else:
                 color_knee = color_red
+            """
 
+            """
             cv2.putText(img, str('Knee'), (550, 90),
                         cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
             cv2.rectangle(img, (600, 75), (625, 100), color_knee, cv2.FILLED)
             plot2 = plot(point_knee, color_knee, abs(knee_position - toe_position), img)
+            """
 
             centroid_thigh = findcentroid(23, 25, lmlist)
 

@@ -8,7 +8,9 @@ import os
 
 def calculate_angle(a):
     radians = np.arctan2(a[2][1] - a[1][1], a[2][0] - a[1][0]) - np.arctan2(a[0][1] - a[1][1], a[0][0] - a[1][0])
-    angle = abs(np.abs(radians * 180.0 / np.pi) - 180)
+    angle = abs(np.abs(radians * 180.0 / np.pi))
+    if angle > 180:
+        angle = 360 - angle
     return round(angle)
 
 
@@ -32,10 +34,23 @@ def findcentroid(id1, id2,lmlist):
     centroid = (centroid_x, centroid_y)
     return centroid
 
+def get_midpoint(line):
+    return (round((line[1][0] + line[0][0]) / 2), round((line[1][1] + line[0][1]) / 2))
+
+def get_line_segment(id1, id2, lmlist):
+    return (find_point_position(id1, lmlist), find_point_position(id2, lmlist))
+
 
 def plot_point(point,color,img):
     cv2.circle(img, point, 5, color, cv2.FILLED)
     return None
+
+def plot_line(pt1, pt2, color, img):
+    cv2.line(img, pt1, pt2, color, 2)
+
+def plot_label(pt, label, color, img):
+    label = str(label)
+    cv2.putText(img, label, pt, cv2.FONT_HERSHEY_PLAIN, 2, color, 2, cv2.LINE_AA)
 
 
 def plot_lines_3points(pt1, pt2, pt3,img):
@@ -53,7 +68,7 @@ def plot(point, color,angle,img):
 
     # if angle:
     cv2.putText(img, str(angle), point[1],
-                    cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                    cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2, cv2.LINE_AA)
     return None
 
 
