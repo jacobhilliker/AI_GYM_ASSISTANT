@@ -14,6 +14,8 @@ COLOR_YELLOW = (0, 255, 255)
 COLOR_GREEN = (0, 255, 0)
 COLOR_WHITE = (255, 255, 255)
 
+LEFT_EAR = 7
+RIGHT_EAR = 8
 LEFT_SHOULDER = 11
 RIGHT_SHOULDER = 12
 LEFT_ELBOW = 13
@@ -102,13 +104,20 @@ while cap.isOpened():
             elbow_shoulder_dx = abs(elbow_point[0] - shoulder_point[0])
             torso_dx = abs(shoulder_point[0] - hip_point[0])
 
-            # only applies to bottom of the rep
+            # if elbow is below shoulder (i.e., the beginning/end of the rep)
             if elbow_point[1] > shoulder_point[1]:
 
-                if elbow_shoulder_dx >= 0.15 * torso_dx and elbow_shoulder_dx <= 0.25 * torso_dx:
-                    upper_arm_color = COLOR_GREEN
-                elif elbow_shoulder_dx >= 0.1 * torso_dx and elbow_shoulder_dx <= 0.3 * torso_dx:
-                    upper_arm_color = COLOR_YELLOW
+                # if elbow.x is between shoulder.x and hips.x
+                if ((shoulder_point[0] < elbow_point[0] and elbow_point[0] < hip_point[0])
+                or (hip_point[0] < elbow_point[0] and elbow_point[0] < shoulder_point[0])):
+
+                    if elbow_shoulder_dx >= 0.15 * torso_dx and elbow_shoulder_dx <= 0.25 * torso_dx:
+                        upper_arm_color = COLOR_GREEN
+                    elif elbow_shoulder_dx >= 0.1 * torso_dx and elbow_shoulder_dx <= 0.3 * torso_dx:
+                        upper_arm_color = COLOR_YELLOW
+                    else:
+                        upper_arm_color = COLOR_RED
+
                 else:
                     upper_arm_color = COLOR_RED
             else:
