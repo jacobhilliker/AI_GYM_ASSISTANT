@@ -21,7 +21,7 @@ color_yellow = (0, 255, 255)
 color_black = (0,0,0)
 color_white = (255,255,255)
 good_count = 0
-direction = 0
+direction = 1
 count = 0
 point_no = []
 
@@ -181,7 +181,11 @@ while cap.isOpened():
             #forearm_midpoint = (round((forearm_line[1][0] + forearm_line[0][0]) / 2), round((forearm_line[1][1] + forearm_line[0][1]) / 2))
             forearm_midpoint = get_midpoint(forearm_line)
 
-            plot_forearm_angle = plot_label(forearm_midpoint, slope, color_black, img)
+            cv2.putText(img, str('Forearm'), (520, 90),
+                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
+            cv2.rectangle(img, (600, 75), (625, 100), color_forearm, cv2.FILLED)
+
+            #plot_forearm_angle = plot_label(forearm_midpoint, slope, color_black, img)
 
             ################
 
@@ -226,6 +230,10 @@ while cap.isOpened():
             plot_knee = plot(point_knee, color_knee, angle_knee, img)
             plot_knee2 = plot_label(find_point_position(25, lmlist), round(angle_knee), color_black, img)
 
+            cv2.putText(img, str('Knee'), (550, 140),
+                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
+            cv2.rectangle(img, (600, 125), (625, 150), color_knee, cv2.FILLED)
+
             #point_toe = findpositions(25, 27, 31, lmlist)
             #angle_toe = calculate_angle(point_toe)
             #toe_position = point_knee[2][0]
@@ -253,6 +261,7 @@ while cap.isOpened():
             plot2 = plot(point_knee, color_knee, abs(knee_position - toe_position), img)
             """
 
+            """
             centroid_thigh = findcentroid(23, 25, lmlist)
 
             ear_position = find_point_position(7, lmlist)
@@ -304,8 +313,23 @@ while cap.isOpened():
 
             plot_horizontal_column = plot_bar_horizontal(distance_H, img, thigh_half_length, color_Head_thigh)
 
-            plot4 = plot_bar(angle_knee, (5, 110), img)  #  Expert Advice  - Angle limits
-            color_list = [color_knee, color_Head_thigh, color_back]
+            """
+
+            #plot4 = plot_bar(angle_knee, (5, 110), img)  #  Expert Advice  - Angle limits
+            point_hand = find_point_position(15, lmlist)
+            point_shoulder = find_point_position(11, lmlist)
+            # we want to track distance from hand to shoulder.
+            hand_shoulder_distance = abs(point_hand[1] - point_shoulder[1])
+            #cv2.putText(img, str(hand_shoulder_distance), point_hand, cv2.FONT_HERSHEY_PLAIN, 1, (0,0,0), 1, cv2.LINE_AA)
+
+
+            benchMin = 50
+            benchMax = 300
+            benchMinMax = (benchMin, benchMax)
+
+            plot4 = plot_bar_distance(hand_shoulder_distance, benchMinMax, img)
+
+            color_list = [color_knee, color_forearm, color_back]
             if plot4[0] == 100:
                 if direction == 0:
                     direction = 1

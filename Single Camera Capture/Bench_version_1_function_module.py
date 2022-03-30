@@ -87,6 +87,21 @@ def plot_bar(angle, angle_limits,img):
     cv2.putText(img, f'{int(per)}%', (25, 110), cv2.FONT_HERSHEY_PLAIN, 2, barcolor, 1, cv2.LINE_AA)
     return per, bar
 
+def plot_bar_distance(distance, minMax, img):
+    
+    #percent = np.interp(distance, minMax, (0,100))
+    #percent = (((distance + minMax[0]) / minMax[1]) - (minMax[0] / minMax[1])) * 100
+    percent = np.interp(distance, minMax, (0,100))
+    bar = np.interp(distance, minMax, (400,120))
+
+    barcolor = (255,0,0)
+
+    cv2.rectangle(img, (25,120), (55,400), barcolor, 2)
+    cv2.rectangle(img, (25, int(bar)), (55,400), barcolor, cv2.FILLED)
+    cv2.putText(img, f'{int(percent)}%', (80, 110), cv2.FONT_HERSHEY_PLAIN, 2, barcolor, 1, cv2.LINE_AA)
+    return percent, bar
+
+
 
 def plot_bar_horizontal(distance,img,thigh_half_length,color_Head_thigh):
     dis_mod = abs(distance)
