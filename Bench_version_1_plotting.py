@@ -15,7 +15,7 @@ Y_D = []
 
 
 def animate(i):
-    data = pd.read_csv('aruko_marker.csv')
+    data = pd.read_csv('bench_aruco_marker.csv')
 
     P = data['Point_no']
     X0 = data['B_X0']
