@@ -1,6 +1,6 @@
 # AI_GYM_ASSISTANT
 
-## AI Powdered Gym Assistant App
+## AI-Powered Gym Assistant App
 Introduction
 There has been tremendous development in the field of online education which 
 has enabled people to learn from the best sources, anywhere and at a less cost, 
@@ -12,7 +12,7 @@ injuries that might occur due to erroneous practices.
 
 ## Problem Statement
 
-We are focusing on developing an AI powdered Gym assistant app for the most 
+We are focusing on developing an AI-powered gym assistant app for the most 
 important exercises such as squats, bench press, dumbbell clean and many more. 
 There are a few human pose estimation models that are present in the market, but 
 they are limited in only giving the location of the human body joints and don’t 
@@ -28,7 +28,7 @@ below image represents the screen shot of the program detecting a dumbbell
 squat. This model can track real-time human pose and indicate the correct 
 postures for a dumbbell squat and tracks the repetitions.
 
-The Visual indicators are used to give feedback to the user, and it is divided into 
+The visual indicators are used to give feedback to the user, and it is divided into 
 green, yellow, and red if the posture is within the threshold limit, nearing the 
 threshold limit and crossed the threshold limit respectively. 
 
