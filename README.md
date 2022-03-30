@@ -3,10 +3,10 @@
 ## AI-Powered Gym Assistant App
 Introduction
 There has been tremendous development in the field of online education which 
-has enabled people to learn from the best sources, anywhere and at a less cost, 
+has enabled people to learn from the best sources, anywhere and at a lower cost, 
 but the same is not true for sports and physical training. The presence of a coach 
 is always required which limits the reach and makes it more expensive.
-This Project aim to build an AI-powered sports coaching app, which 
+This project aims to build an AI-powered sports coaching app, which 
 would give them real-time feedback on their performance and can predict any 
 injuries that might occur due to erroneous practices.
 
