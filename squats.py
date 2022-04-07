@@ -238,15 +238,10 @@ while cap.isOpened():
                 csv_writer.writerow(combined_data)
 
             plot_rectangle(img, 'Total_REPS', (25, 25), (120, 5), (170, 35))
-            cv2.putText(img, 'Total_REPS', (25, 25),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
-            cv2.rectangle(img, (120, 5), (170, 35), (0, 0, 0), cv2.FILLED)
             cv2.putText(img, str(int(count)), (130, 35),
                         cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2, cv2.LINE_AA)
 
-            cv2.putText(img, 'Good_REPS', (25, 75),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
-            cv2.rectangle(img, (120, 50), (170, 80), (0, 0, 0), cv2.FILLED)
+            plot_rectangle(img, 'Good_REPS', (25, 75), (120, 50), (170, 80))
             cv2.putText(img, str(int(good_count)), (130, 80),
                         cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2, cv2.LINE_AA)
     #
