@@ -73,24 +73,33 @@ def check_incline_press():
                 plot_line(thigh_line[0], thigh_line[1], incline_color, img)
                 plot_label(torso_line[1], incline_angle, COLOR_WHITE, img)
 
-                # check and plot upper arm angle (expert advice)
-                elbow_shoulder_dx = abs(elbow_point[0] - shoulder_point[0])
-                torso_dx = abs(shoulder_point[0] - hip_point[0])
+                # when the wrist is below the ear (i.e., the bottom of the rep)
+                if wrist_point[1] >= ear_point[1]:
 
-                upper_arm_color = classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx, torso_dx)
+                    # check and plot upper arm angle (expert advice)
+                    elbow_shoulder_dx = abs(elbow_point[0] - shoulder_point[0])
+                    torso_dx = abs(shoulder_point[0] - hip_point[0])
 
-                upper_arm_line = get_line_segment(shoulder, elbow, landmarks)
-                plot_line(upper_arm_line[0], upper_arm_line[1], upper_arm_color, img)
+                    upper_arm_color = classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx, torso_dx)
 
-                # check and plot full arm angle (expert advice)
-                arm_extension_points = (shoulder_point, elbow_point, wrist_point)
-                arm_extension_angle = calculate_angle(arm_extension_points)
+                    upper_arm_line = get_line_segment(shoulder, elbow, landmarks)
+                    plot_line(upper_arm_line[0], upper_arm_line[1], upper_arm_color, img)
 
-                # might not work with actual weights; might need to use arUco marker instead of wrist
-                arm_extended = arm_extension_angle > 160 and arm_extension_angle < 180 and wrist_point[1] < ear_point[1]
+                else:
+
+                    # check and plot full arm angle (expert advice)
+                    arm_extension_points = (shoulder_point, elbow_point, wrist_point)
+                    arm_extension_angle = calculate_angle(arm_extension_points)
+
+                    arm_elevation_points = (hip_point, shoulder_point, wrist_point)
+                    arm_elevation_angle = calculate_angle(arm_elevation_points)
+
+                    # might not work with actual weights; might need to use arUco marker instead of wrist
+                    arm_color = classify_arm(arm_extension_angle, arm_elevation_angle)
+                    plot_line(shoulder_point, elbow_point, arm_color, img)
+                    plot_line(elbow_point, wrist_point, arm_color, img)
                 
-                if arm_extended:
-                    plot_rectangle(img, 'Arm Extension', (32, 32), (96, 32), (128, 96), COLOR_GREEN)
+                # plot_rectangle(img, 'Arm Extension', (12, 24), (144, 8), (168, 32), upper_arm_color)
 
         # show final image
         cv2.imshow("AI Gym Assistant", img)
@@ -101,6 +110,37 @@ def check_incline_press():
 
     cap.release()
     cv2.destroyAllWindows()
+
+'''
+Parameters:
+    arm_extension_angle: the angle formed by the user's most visible shoulder, elbow, and wrist.
+    arm_elevation_angle: the angle formed by the user's most visible hip, shoulder, and wrist.
+Determines if the user's arm is correctly extended using a scoring system.
+Returns a color reflecting the user's score.
+'''
+def classify_arm(arm_extension_angle, arm_elevation_angle):
+
+    score = 0
+
+    if arm_extension_angle >= 145 and arm_extension_angle <= 165:
+        score += 2
+    elif arm_extension_angle >= 130 and arm_extension_angle <= 180:
+        score += 1
+
+    if arm_elevation_angle >= 85 and arm_elevation_angle <= 105:
+        score += 2
+    elif arm_elevation_angle >= 75 and arm_elevation_angle <= 115:
+        score += 1
+
+    # assess scoring to decide color
+    arm_color = COLOR_RED
+
+    if score == 4:
+        arm_color = COLOR_GREEN
+    elif score >= 2:
+        arm_color = COLOR_YELLOW
+
+    return arm_color
 
 '''
 Parameters:
@@ -125,30 +165,24 @@ Parameters:
     shoulder_point, elbow_point, hip_point: 2D points of the respective body parts
     elbow_shoulder_dx: the x-distance between the user's elbow and shoulder
     torso_dx: the x-distance between the user's shoulder and hip
-First determines if the upper arm is in the proper place to be tracked, then determines if angle is
-good, OK, or poor.
+Determines if arm angle at the bottom of the rep is good, OK, or poor.
 Returns a color to be plotted on the image.
 '''
 def classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx, torso_dx):
 
-    upper_arm_color = COLOR_WHITE
+    # if elbow.x is between shoulder.x and hips.x
+    if ((shoulder_point[0] < elbow_point[0] and elbow_point[0] < hip_point[0])
+    or (hip_point[0] < elbow_point[0] and elbow_point[0] < shoulder_point[0])):
 
-    # if elbow is below shoulder (i.e., the beginning/end of the rep)
-    if elbow_point[1] > shoulder_point[1]:
-
-        # if elbow.x is between shoulder.x and hips.x
-        if ((shoulder_point[0] < elbow_point[0] and elbow_point[0] < hip_point[0])
-        or (hip_point[0] < elbow_point[0] and elbow_point[0] < shoulder_point[0])):
-
-            if elbow_shoulder_dx >= 0.15 * torso_dx and elbow_shoulder_dx <= 0.25 * torso_dx:
-                upper_arm_color = COLOR_GREEN
-            elif elbow_shoulder_dx >= 0.1 * torso_dx and elbow_shoulder_dx <= 0.3 * torso_dx:
-                upper_arm_color = COLOR_YELLOW
-            else:
-                upper_arm_color = COLOR_RED
-
+        if elbow_shoulder_dx >= 0.15 * torso_dx and elbow_shoulder_dx <= 0.25 * torso_dx:
+            upper_arm_color = COLOR_GREEN
+        elif elbow_shoulder_dx >= 0.1 * torso_dx and elbow_shoulder_dx <= 0.3 * torso_dx:
+            upper_arm_color = COLOR_YELLOW
         else:
             upper_arm_color = COLOR_RED
+
+    else:
+        upper_arm_color = COLOR_RED
 
     return upper_arm_color
 
