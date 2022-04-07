@@ -129,9 +129,7 @@ while cap.isOpened():
             else:
                 color_back = color_red
 
-            cv2.putText(img, str('Back'), (550, 40),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
-            cv2.rectangle(img, (600, 25), (625, 50), color_back, cv2.FILLED)
+            plot_rectangle(img, 'Back', (550, 40), (600, 25), (625, 50), color_back)
 
             plot1 = plot(point_back, color_back, angle_back, img)
 
@@ -159,9 +157,7 @@ while cap.isOpened():
             else:
                 color_knee = color_red
 
-            cv2.putText(img, str('Knee'), (550, 90),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
-            cv2.rectangle(img, (600, 75), (625, 100), color_knee, cv2.FILLED)
+            plot_rectangle(img, str('Knee'), (550, 90), (600, 75), (625, 100), color_knee)
             plot2 = plot(point_knee, color_knee, abs(knee_position - toe_position), img)
 
             centroid_thigh = find_midpoint(23, 25, landmarks)
@@ -185,9 +181,7 @@ while cap.isOpened():
             plot_point(centroid_thigh, color_Head_thigh, img)
             plot_point(ear_position, color_Head_thigh, img)
 
-            cv2.putText(img, str('Head-Thigh'), (500, 140),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
-            cv2.rectangle(img, (600, 125), (625, 150), color_Head_thigh, cv2.FILLED)
+            plot_rectangle(img, 'Head-Thigh', (500, 140), (600, 125), (625, 150), color_Head_thigh)
 
             # bounding box
             toe_1_position = find_point_position(29, landmarks)
@@ -243,6 +237,7 @@ while cap.isOpened():
                 csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 csv_writer.writerow(combined_data)
 
+            plot_rectangle(img, 'Total_REPS', (25, 25), (120, 5), (170, 35))
             cv2.putText(img, 'Total_REPS', (25, 25),
                         cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
             cv2.rectangle(img, (120, 5), (170, 35), (0, 0, 0), cv2.FILLED)

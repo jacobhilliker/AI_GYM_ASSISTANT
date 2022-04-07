@@ -4,6 +4,30 @@ import numpy as np
 import cv2.aruco as aruco
 import os
 
+COLOR_RED = (0, 0, 255)
+COLOR_YELLOW = (0, 255, 255)
+COLOR_GREEN = (0, 255, 0)
+COLOR_WHITE = (255, 255, 255)
+
+LEFT_EAR = 7
+RIGHT_EAR = 8
+LEFT_SHOULDER = 11
+RIGHT_SHOULDER = 12
+LEFT_ELBOW = 13
+RIGHT_ELBOW = 14
+LEFT_WRIST = 15
+RIGHT_WRIST = 16
+LEFT_HIP = 23
+RIGHT_HIP = 24
+LEFT_KNEE = 25
+RIGHT_KNEE = 26
+LEFT_ANKLE = 27
+RIGHT_ANKLE = 28
+LEFT_HEEL = 29
+RIGHT_HEEL = 30
+LEFT_FOOT_INDEX = 31
+RIGHT_FOOT_INDEX = 32
+
 def calculate_angle(a):
     radians = np.arctan2(a[2][1] - a[1][1], a[2][0] - a[1][0]) - np.arctan2(a[0][1] - a[1][1], a[0][0] - a[1][0])
     angle = np.abs(radians * 180.0 / np.pi)
@@ -16,8 +40,6 @@ def find_line_length(pt1, pt2):
 
 
 def find_midpoint(id1, id2,landmarks):
-    point1 = (landmarks[id1][1], landmarks[id1][2])
-    point2 = (landmarks[id2][1], landmarks[id2][2])
     midpoint_x = int((landmarks[id1][1] + landmarks[id2][1]) / 2)
     midpoint_y = int((landmarks[id1][2] + landmarks[id2][2]) / 2)
     midpoint = (midpoint_x, midpoint_y)
@@ -117,6 +139,10 @@ def plot_bar_horizontal(distance,img,thigh_half_length,color_Head_thigh):
         cv2.rectangle(img, (260, 20), (400, 40), color_Head_thigh, 2)
         cv2.rectangle(img, (330, 20), (int(bar), 40), color_Head_thigh, cv2.FILLED)
 
+
+def plot_rectangle(img, text, pt1, pt2, pt3, color=COLOR_WHITE):
+    cv2.putText(img, str(text), pt1, cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 1, cv2.LINE_AA)
+    cv2.rectangle(img, pt2, pt3, color, cv2.FILLED)
 
 def find_aruco_markers(img, markerSize=6, totalMarkers=250, draw=True):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
