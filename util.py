@@ -4,10 +4,15 @@ import numpy as np
 import cv2.aruco as aruco
 import os
 
+GOOD = 0
+OK = 1
+POOR = 2
+
 COLOR_RED = (0, 0, 255)
 COLOR_YELLOW = (0, 255, 255)
 COLOR_GREEN = (0, 255, 0)
 COLOR_WHITE = (255, 255, 255)
+COLOR_BLACK = (0, 0, 0)
 
 LEFT_EAR = 7
 RIGHT_EAR = 8
@@ -35,6 +40,14 @@ def calculate_angle(a):
         angle = 360 - angle
     return round(angle)
 
+
+def find_centroid(x, y, width, height):
+
+    centroid_x = x + (abs(width) / 2)
+    centroid_y = y + (abs(height) / 2)
+    return (int(centroid_x), int(centroid_y))
+
+
 def find_line_length(pt1, pt2):
     return np.linalg.norm(pt1 - pt2)
 
@@ -45,17 +58,6 @@ def find_midpoint(id1, id2,landmarks):
     midpoint = (midpoint_x, midpoint_y)
     return midpoint
 
-
-'''
-def extend_line(id1, id2, landmarks):
-    p1, p2 = get_line_segment(id1, id2, landmarks)
-    x1, y1, x2, y2 = (p1[1], p1[2], p2[1], p2[2])
-    
-    delta_x = x2 - x1
-    delta_y = y2 - y1
-    
-    p1_ext = (x1 - delta)
-'''
 
 def find_point_position(id,landmarks):
     point = (landmarks[id][1], landmarks[id][2])
@@ -101,9 +103,9 @@ def plot_line(pt1, pt2, color, img):
     cv2.line(img, pt1, pt2, color, 2)
 
 
-def plot_label(pt, label, color, img):
+def plot_label(pt, label, color, img, scale=2.0):
     label = str(label)
-    cv2.putText(img, label, pt, cv2.FONT_HERSHEY_PLAIN, 2, color, 2, cv2.LINE_AA)
+    cv2.putText(img, label, pt, cv2.FONT_HERSHEY_PLAIN, scale, color, 2, cv2.LINE_AA)
 
 
 def plot_bar(angle, angle_limits,img):
@@ -155,6 +157,7 @@ def find_aruco_markers(img, markerSize=6, totalMarkers=250, draw=True):
         aruco.drawDetectedMarkers(img, bboxs)
     return [bboxs, ids]
 
+
 '''
 Returns x, y, width, and height of the bounding box of the LAST found arUco marker
 '''
@@ -166,20 +169,32 @@ def plot_aruco_markers(arucofound,img):
         bottom_right = bbox[0][2][0], bbox[0][2][1]
         bottom_left = bbox[0][3][0], bbox[0][3][1]
 
-        marker_centroid = int((top_left[0] + top_right[0] + bottom_right[0] + bottom_left[0]) / 4), int((top_left[1] + top_right[1] + bottom_right[1] + bottom_left[1]) / 4)
-        cv2.circle(img, (marker_centroid[0], marker_centroid[1]), 3, (255, 0, 0), 3)
         lx = int(top_left[0])
         ly = int(top_left[1])
         rx = int(bottom_right[0])
         ry = int(bottom_right[1])
 
+        width = abs(int((top_right[0] + bottom_right[0]) / 2) - int((top_left[0] + bottom_left[0]) / 2))
+        height = abs(int((bottom_left[1] + bottom_right[1]) / 2) - int((top_left[1] + top_right[1]) / 2))
+
         if rx == lx or ry == ly:
             bounding_box = (lx, ly, 100, 100)
 
         else:
-            bounding_box = (lx, ly, (rx - lx), (ry - ly))
+            bounding_box = (lx, ly, width, height)
 
     return bounding_box
+
+
+def sum_over(list):
+
+    sum = 0
+
+    for i in range(len(list)):
+        sum += list[i]
+
+    return sum
+
 
 def graph_plot():
     os.system("plotting.py")

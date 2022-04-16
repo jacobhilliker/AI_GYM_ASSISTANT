@@ -1,32 +1,66 @@
-import math
 import cv2
 import mediapipe as mp
 import time
-import _thread
-import csv
-import os
-from itertools import count
 
 from util import *
 
+# called by main function
 def check_incline_press():
 
+    global reps, good_reps, start_rep, mid_rep, end_rep, past_mid_rep, is_user_ready
+
+    # initialize rep tracking
     reps = 0
     good_reps = 0
+    
+    # initialize weight marker tracking
+    tracker = cv2.TrackerCSRT_create()
+    marker_x, marker_y, marker_w, marker_h = 0, 0, 0, 0
+
+    # tracks good, OK, and poor frames at beginning, middle, and end of rep
+    start_rep = [0, 0, 0]
+    mid_rep = [0, 0, 0]
+    end_rep = [0, 0, 0]
+
+    past_mid_rep = False
+
+    # avoids counting "bad" frames before first rep starts
+    is_user_ready = False
 
     # instantiate pose module
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
-    # mp_draw = mp.solutions.drawing_utils
-    # mp_styles = mp.solutions.drawing_styles
 
     # start video capture
     cap = cv2.VideoCapture(0)
+
+    # time performance tracking
+    last_time, current_time = 0, 0
 
     while cap.isOpened():
 
         ok, img = cap.read()
         
+        '''
+        # aruco tracking
+        found_markers = find_aruco_markers(img)
+
+        if len(found_markers[0]) != 0:
+            marker_x, marker_y, marker_w, marker_h = plot_aruco_markers(found_markers, img)
+            try:
+                ok = tracker.init(img, (marker_x, marker_y, marker_w, marker_h))
+            except:
+                pass
+        else:
+            try:
+                ok, (marker_x, marker_y, marker_w, marker_h) = tracker.update(img)
+            except:
+                pass
+
+        marker_centroid = find_centroid(marker_x, marker_y, marker_h, marker_w)
+        cv2.circle(img, marker_centroid, 4, COLOR_GREEN, 3)
+        '''        
+
         # detect pose
         img.flags.writeable = False # done temporarily to improve performance
         current_pose = pose.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
@@ -42,7 +76,7 @@ def check_incline_press():
                 landmarks.append([id, pixel_x, pixel_y, landmark.visibility])
 
             if len(landmarks) > 0:
-
+                
                 # find relevant points of whichever side is more visible
                 left_vis = landmarks[LEFT_ELBOW][3]
                 right_vis = landmarks[RIGHT_ELBOW][3]
@@ -73,7 +107,7 @@ def check_incline_press():
                 plot_line(thigh_line[0], thigh_line[1], incline_color, img)
                 plot_label(torso_line[1], incline_angle, COLOR_WHITE, img)
 
-                # when the wrist is below the ear (i.e., the bottom of the rep)
+                # bottom of the rep
                 if wrist_point[1] >= ear_point[1]:
 
                     # check and plot upper arm angle (expert advice)
@@ -82,9 +116,13 @@ def check_incline_press():
 
                     upper_arm_color = classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx, torso_dx)
 
+                    if incline_color != COLOR_RED and upper_arm_color != COLOR_RED:
+                        is_user_ready = True
+
                     upper_arm_line = get_line_segment(shoulder, elbow, landmarks)
                     plot_line(upper_arm_line[0], upper_arm_line[1], upper_arm_color, img)
 
+                # top of the rep
                 else:
 
                     # check and plot full arm angle (expert advice)
@@ -98,14 +136,50 @@ def check_incline_press():
                     arm_color = classify_arm(arm_extension_angle, arm_elevation_angle)
                     plot_line(shoulder_point, elbow_point, arm_color, img)
                     plot_line(elbow_point, wrist_point, arm_color, img)
-                
-                # plot_rectangle(img, 'Arm Extension', (12, 24), (144, 8), (168, 32), upper_arm_color)
+                    #plot_label((480,72), 'Arm Extension', COLOR_WHITE, img, scale=1.5)
+
+            # ---------- REP TRACKING ----------
+
+            # set global variable for mid rep if mid rep has been maintained for select number of frames
+            past_mid_rep = sum_over(mid_rep) >= 20
+
+            # count rep as complete
+            if past_mid_rep and sum_over(end_rep) >= 20:
+                    
+                reps += 1
+                    
+                if is_good_rep():
+                    good_reps += 1
+
+                print(f'\nrep: {reps}')
+                print(start_rep)
+                print(mid_rep)
+                print(end_rep)
+                    
+                reset_rep()
+
+            # label image with numbers of reps and good reps
+            if is_user_ready:
+            
+                plot_label((12, 36), 'Reps: ', COLOR_BLACK, img, scale=1.5)
+                plot_label((180, 38), reps, COLOR_BLACK, img, scale=1.5)
+                plot_label((12, 72), 'Good Reps: ', COLOR_BLACK, img, scale=1.5)
+                plot_label((180, 74), good_reps, COLOR_BLACK, img, scale=1.5)
+
+        # track FPS
+        current_time = time.time()
+        if last_time != 0:
+            plot_label((12, 108), f'FPS: {int(1 / (current_time - last_time))}', COLOR_BLACK, img, 1.5)
+        else:
+            plot_label((12, 108), 'FPS: 0', COLOR_BLACK, img, 1.5)
+        last_time = current_time
 
         # show final image
         cv2.imshow("AI Gym Assistant", img)
-        
+
         # quit with 'q' key
         if cv2.waitKey(5) == ord('q'):
+            print(f'\nreps: {reps}\n')
             break
 
     cap.release()
@@ -122,14 +196,14 @@ def classify_arm(arm_extension_angle, arm_elevation_angle):
 
     score = 0
 
-    if arm_extension_angle >= 145 and arm_extension_angle <= 165:
+    if arm_extension_angle >= 145 and arm_extension_angle <= 170:
         score += 2
-    elif arm_extension_angle >= 130 and arm_extension_angle <= 180:
+    elif arm_extension_angle >= 130 and arm_extension_angle <= 185:
         score += 1
 
-    if arm_elevation_angle >= 85 and arm_elevation_angle <= 105:
+    if arm_elevation_angle >= 90 and arm_elevation_angle <= 110:
         score += 2
-    elif arm_elevation_angle >= 75 and arm_elevation_angle <= 115:
+    elif arm_elevation_angle >= 80 and arm_elevation_angle <= 120:
         score += 1
 
     # assess scoring to decide color
@@ -139,6 +213,9 @@ def classify_arm(arm_extension_angle, arm_elevation_angle):
         arm_color = COLOR_GREEN
     elif score >= 2:
         arm_color = COLOR_YELLOW
+
+    if is_user_ready:
+        update_rep(arm_color, mid_rep)
 
     return arm_color
 
@@ -170,6 +247,8 @@ Returns a color to be plotted on the image.
 '''
 def classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx, torso_dx):
 
+    global past_mid_rep
+
     # if elbow.x is between shoulder.x and hips.x
     if ((shoulder_point[0] < elbow_point[0] and elbow_point[0] < hip_point[0])
     or (hip_point[0] < elbow_point[0] and elbow_point[0] < shoulder_point[0])):
@@ -184,7 +263,51 @@ def classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx
     else:
         upper_arm_color = COLOR_RED
 
+    if is_user_ready:
+
+        if past_mid_rep:
+            update_rep(upper_arm_color, end_rep)
+        else:
+            update_rep(upper_arm_color, start_rep)
+
     return upper_arm_color
 
+
+def is_good_rep():
+
+    good_rep_parts = 0
+
+    if start_rep[GOOD] > start_rep[OK] and start_rep[GOOD] > start_rep[POOR]:
+        good_rep_parts += 1
+                    
+    if mid_rep[GOOD] >= 3 and mid_rep[GOOD] > mid_rep[POOR]:
+        good_rep_parts += 1
+
+    if end_rep[GOOD] > end_rep[OK] and end_rep[GOOD] > end_rep[POOR]:
+        good_rep_parts += 1
+
+    return good_rep_parts > 1
+
+
+def update_rep(color, rep_stage):
+
+    if color == COLOR_GREEN:
+        rep_stage[GOOD] += 1
+    elif color == COLOR_YELLOW:
+        rep_stage[OK] += 1
+    elif color == COLOR_RED:
+        rep_stage[POOR] += 1
+
+
+def reset_rep():
+    
+    global start_rep, mid_rep, end_rep
+
+    start_rep = [0, 0, 0]
+    mid_rep = [0, 0, 0]
+    end_rep = [0, 0, 0]
+
+
+# main function
 if __name__ == '__main__':
     check_incline_press()
