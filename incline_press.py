@@ -17,6 +17,11 @@ def check_incline_press():
     tracker = cv2.TrackerCSRT_create()
     marker_x, marker_y, marker_w, marker_h = 0, 0, 0, 0
 
+    # initialize colors for arm status
+    upper_arm_color = COLOR_BLACK
+    arm_color = COLOR_BLACK
+    start_color = COLOR_BLACK
+    
     # tracks good, OK, and poor frames at beginning, middle, and end of rep
     start_rep = [0, 0, 0]
     mid_rep = [0, 0, 0]
@@ -122,6 +127,17 @@ def check_incline_press():
                     upper_arm_line = get_line_segment(shoulder, elbow, landmarks)
                     plot_line(upper_arm_line[0], upper_arm_line[1], upper_arm_color, img)
 
+                    # update indicators for start position and arm extension
+                    if past_mid_rep:
+                        if is_good_mid():
+                            arm_color = COLOR_GREEN
+                        else:
+                            arm_color = COLOR_YELLOW
+                    else:
+                        arm_color = COLOR_BLACK
+                        start_color = upper_arm_color
+
+
                 # top of the rep
                 else:
 
@@ -136,7 +152,12 @@ def check_incline_press():
                     arm_color = classify_arm(arm_extension_angle, arm_elevation_angle)
                     plot_line(shoulder_point, elbow_point, arm_color, img)
                     plot_line(elbow_point, wrist_point, arm_color, img)
-                    #plot_label((480,72), 'Arm Extension', COLOR_WHITE, img, scale=1.5)
+
+                    # update indicator for upper arm angle
+                    if is_good_start():
+                        start_color = COLOR_GREEN
+                    else:
+                        start_color = COLOR_YELLOW
 
             # ---------- REP TRACKING ----------
 
@@ -157,21 +178,28 @@ def check_incline_press():
                 print(end_rep)
                     
                 reset_rep()
+                upper_arm_color = COLOR_BLACK
+                arm_color = COLOR_BLACK
 
             # label image with numbers of reps and good reps
             if is_user_ready:
             
                 plot_label((12, 36), 'Reps: ', COLOR_BLACK, img, scale=1.5)
-                plot_label((180, 38), reps, COLOR_BLACK, img, scale=1.5)
+                plot_label((210, 38), reps, COLOR_BLACK, img, scale=1.5)
                 plot_label((12, 72), 'Good Reps: ', COLOR_BLACK, img, scale=1.5)
-                plot_label((180, 74), good_reps, COLOR_BLACK, img, scale=1.5)
+                plot_label((210, 74), good_reps, COLOR_BLACK, img, scale=1.5)
+
+                plot_label((12,108), 'Start Position', COLOR_BLACK, img, scale=1.5)
+                plot_rectangle(img, '', (180, 180), (210, 90), (230, 110), start_color)
+                plot_label((12,144), 'Arm Extension', COLOR_BLACK, img, scale=1.5)
+                plot_rectangle(img, '', (180, 180), (210, 126), (230, 146), arm_color)
 
         # track FPS
         current_time = time.time()
         if last_time != 0:
-            plot_label((12, 108), f'FPS: {int(1 / (current_time - last_time))}', COLOR_BLACK, img, 1.5)
+            plot_label((12, 180), f'FPS: {int(1 / (current_time - last_time))}', COLOR_BLACK, img, scale=1.5)
         else:
-            plot_label((12, 108), 'FPS: 0', COLOR_BLACK, img, 1.5)
+            plot_label((12, 180), 'FPS: 0', COLOR_BLACK, img, scale=1.5)
         last_time = current_time
 
         # show final image
@@ -273,17 +301,29 @@ def classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx
     return upper_arm_color
 
 
+def is_good_start():
+    return start_rep[GOOD] > start_rep[OK] and start_rep[GOOD] > start_rep[POOR]
+
+
+def is_good_mid():
+    return mid_rep[GOOD] >= 3 and mid_rep[GOOD] > mid_rep[POOR]
+
+
+def is_good_end():
+    return end_rep[GOOD] > end_rep[OK] and end_rep[GOOD] > end_rep[POOR]
+
+
 def is_good_rep():
 
     good_rep_parts = 0
 
-    if start_rep[GOOD] > start_rep[OK] and start_rep[GOOD] > start_rep[POOR]:
+    if is_good_start():
         good_rep_parts += 1
                     
-    if mid_rep[GOOD] >= 3 and mid_rep[GOOD] > mid_rep[POOR]:
+    if is_good_mid():
         good_rep_parts += 1
 
-    if end_rep[GOOD] > end_rep[OK] and end_rep[GOOD] > end_rep[POOR]:
+    if is_good_end():
         good_rep_parts += 1
 
     return good_rep_parts > 1
