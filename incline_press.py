@@ -3,6 +3,7 @@ import mediapipe as mp
 import time
 
 from util import *
+from incline_constraints import *
 
 # called by main function
 def check_incline_press():
@@ -224,14 +225,14 @@ def classify_arm(arm_extension_angle, arm_elevation_angle):
 
     score = 0
 
-    if arm_extension_angle >= 145 and arm_extension_angle <= 170:
+    if arm_extension_angle >= ARM_EXTENSION_ANGLE_GOOD_MIN and arm_extension_angle <= ARM_EXTENSION_ANGLE_GOOD_MAX:
         score += 2
-    elif arm_extension_angle >= 130 and arm_extension_angle <= 185:
+    elif arm_extension_angle >= ARM_EXTENSION_ANGLE_MIN and arm_extension_angle <= ARM_EXTENSION_ANGLE_MAX:
         score += 1
 
-    if arm_elevation_angle >= 90 and arm_elevation_angle <= 110:
+    if arm_elevation_angle >= ARM_ELEVATION_ANGLE_GOOD_MIN and arm_elevation_angle <= ARM_ELEVATION_ANGLE_GOOD_MAX:
         score += 2
-    elif arm_elevation_angle >= 80 and arm_elevation_angle <= 120:
+    elif arm_elevation_angle >= ARM_ELEVATION_ANGLE_MIN and arm_elevation_angle <= ARM_ELEVATION_ANGLE_MAX:
         score += 1
 
     # assess scoring to decide color
@@ -258,9 +259,9 @@ def classify_incline_angle(incline_angle):
     # check and plot incline angle (expert advice)
     incline_color = COLOR_RED
 
-    if incline_angle <= 48 and incline_angle >= 27:
+    if incline_angle <= INCLINE_ANGLE_GOOD_MAX and incline_angle >= INCLINE_ANGLE_GOOD_MIN:
         incline_color = COLOR_GREEN
-    elif incline_angle <= 55 and incline_angle >= 20:
+    elif incline_angle <= INCLINE_ANGLE_MAX and incline_angle >= INCLINE_ANGLE_MIN:
         incline_color = COLOR_YELLOW
 
     return incline_color
