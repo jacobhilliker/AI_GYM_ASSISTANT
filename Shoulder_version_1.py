@@ -125,9 +125,9 @@ while cap.isOpened():
             point_leftarm = findpositions(23, 11, 13, lmlist)
             angle_leftarm = calculate_angle(point_leftarm)
             # color left arm (NEED EXPERT ADVICE)
-            if angle_leftarm >= 90 and angle_leftarm < 180:
+            if angle_leftarm >= 70 and angle_leftarm < 180:
                 color_leftarm = color_green
-            elif angle_leftarm > 70 and angle_leftarm < 90:
+            elif angle_leftarm > 45 and angle_leftarm < 70:
                 color_leftarm = color_yellow
             else:
                 color_leftarm = color_red
@@ -148,9 +148,9 @@ while cap.isOpened():
             slope = rise/run
             slope = abs(round(slope))
             # angle limits (NEED EXPERT ADVICE)
-            if slope > 6:
+            if slope > 5:
                 color_leftforearm = color_green
-            elif slope > 3:
+            elif slope > 2:
                 color_leftforearm = color_yellow
             else:
                 color_leftforearm = color_red
@@ -166,9 +166,9 @@ while cap.isOpened():
             point_rightarm = findpositions(24, 12, 14, lmlist)
             angle_rightarm = calculate_angle(point_rightarm)
             # color right arm (NEED EXPERT ADVICE)
-            if angle_rightarm >= 90 and angle_rightarm < 180:
+            if angle_rightarm >= 70 and angle_rightarm < 180:
                 color_rightarm = color_green
-            elif angle_rightarm > 70 and angle_rightarm < 90:
+            elif angle_rightarm > 45 and angle_rightarm < 70:
                 color_rightarm = color_yellow
             else:
                 color_rightarm = color_red
@@ -189,9 +189,9 @@ while cap.isOpened():
             slope1 = rise1/run1
             slope1 = abs(round(slope1))
             # angle limits (NEED EXPERT ADVICE)
-            if slope1 > 6:
+            if slope1 > 5:
                 color_rightforearm = color_green
-            elif slope1 > 3:
+            elif slope1 > 2:
                 color_rightforearm = color_yellow
             else:
                 color_rightforearm = color_red
@@ -214,32 +214,34 @@ while cap.isOpened():
             # track distance from right hand to right shoulder
             rightthand_righttshoulder_distance = abs(point_righthand[1] - point_rightshoulder[1])
             # placeholders
-            benchMin = 50
-            benchMax = 300
+            benchMin = 100
+            benchMax = 200
             benchMinMax = (benchMin, benchMax)
             # plot left arm
             plot3 = plot_bar_distance(lefthand_leftshoulder_distance, benchMinMax, img)
             # plot right arm
-            plot4 = plot_bar_distance(rightthand_righttshoulder_distance, benchMinMax, img)
+            plot4 = plot_bar_distance1(rightthand_righttshoulder_distance, benchMinMax, img)
             # color list
             color_list = [color_leftforearm, color_leftarm, color_rightforearm, color_rightarm]
             # rep count
             if plot3[0] == 100 and plot4[0] == 100:
-                if direction == 0:
-                    direction = 1
-                    count += 0.5
-                    if color_red not in color_list:
-                        good_count += 0.5
-                    else:
-                        good_count += 0
-            if plot3[0] == 0 and plot4[0] == 0:
                 if direction == 1:
                     direction = 0
-                    count += 0.5
                     if color_red not in color_list:
                         good_count += 0.5
+                        count += 0.5
                     else:
                         good_count += 0
+                        count += 0.5
+            if plot3[0] == 0 and plot4[0] == 0:
+                if direction == 0:
+                    direction = 1
+                    if color_red not in color_list:
+                        good_count += 0.5
+                        count += 0.5
+                    else:
+                        good_count += 0
+                        count += 0.5
             # plot reps
             pose1 = results.pose_landmarks.landmark
             pose_data = list(
