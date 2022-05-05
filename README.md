@@ -12,46 +12,11 @@ injuries that might occur due to erroneous practices.
 
 ## Problem Statement
 
-We are focusing on developing an AI-powered gym assistant app for the most 
-important exercises such as squats, bench press, dumbbell clean and many more. 
-There are a few human pose estimation models that are present in the market, but 
-they are limited in only giving the location of the human body joints and don’t 
-connect the pose estimation to correct postures for the required exercise. We want 
-to address this issue and incorporate the domain knowledge from the sports 
-industry and the technology available to make it more accessible to the public.
+The final goal of the project is to develop heuristic models for a wide array of common exercises
+to support users' gym workout routines. Through this project, we created heuristic models for the
+incline press, bench press, shoulder press, and for walking on the treadmill.
 
-First, we are working on a Barbell Squat workout. The key parameters here are 
-the back angle, knee angle, the position of head relative the thigh and the position
-of barbell which is continuously monitored. The data from the domain expert is 
-used to determine the threshold values of these parameters for a proper squat. The 
-below image represents the screen shot of the program detecting a dumbbell 
-squat. This model can track real-time human pose and indicate the correct 
-postures for a dumbbell squat and tracks the repetitions.
-
-The visual indicators are used to give feedback to the user, and it is divided into 
-green, yellow, and red if the posture is within the threshold limit, nearing the 
-threshold limit and crossed the threshold limit respectively. 
-
-The bounding box is a visual indicator for the person to be within the box.
-A PVC pipe is used in place of a barbell for demonstration purpose and is traced 
-using Aruco markers. 
-
-The front view tracks the stance width relative to the shoulder length and the side view tracks all the parameters for a successful barbell 
-squat. The graph represents the position of the barbell.
-
-![Screenshot (13)](https://user-images.githubusercontent.com/26201695/152658957-dc9b420f-2136-4b32-bf2b-9534263c4f78.png)
-
-Fig 1: Screen shot of the Real Time pose capture for a squat exercise.
-
-The 3D reconstructed image is obtained by triangulation method using two 
-cameras.
-
-![Screenshot (14)](https://user-images.githubusercontent.com/26201695/152659129-f4f12ee5-ace9-4d9a-b8c8-aaf00bb93b80.png)
-
-Fig 2: Screen shot of the Real Time 3D reconstruction of the human model performing a 
-barbell squat.
-
-# Requirement
+# Requirements
 ```
 Mediapipe
 Python3.8

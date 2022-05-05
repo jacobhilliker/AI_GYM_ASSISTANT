@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import time
+import math
 
 from util import *
 from incline_constraints import *
@@ -105,6 +106,7 @@ def check_incline_press():
                 incline_angle = 180 - calculate_angle(incline_points)
                 incline_color = classify_incline_angle(incline_angle)
 
+                forearm_line = get_line_segment(elbow, wrist, landmarks)
                 torso_line = get_line_segment(shoulder, hip, landmarks)
                 thigh_line = get_line_segment(hip, knee, landmarks)
 
@@ -121,12 +123,15 @@ def check_incline_press():
                     torso_dx = abs(shoulder_point[0] - hip_point[0])
 
                     upper_arm_color = classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx, torso_dx)
+                    forearm_color = classify_forearm(shoulder_point, elbow_point, wrist_point)
 
                     if incline_color != COLOR_RED and upper_arm_color != COLOR_RED:
                         is_user_ready = True
 
                     upper_arm_line = get_line_segment(shoulder, elbow, landmarks)
                     plot_line(upper_arm_line[0], upper_arm_line[1], upper_arm_color, img)
+
+                    plot_line(forearm_line[0], forearm_line[1], forearm_color, img)
 
                     # update indicators for start position and arm extension
                     if past_mid_rep:
@@ -214,6 +219,7 @@ def check_incline_press():
     cap.release()
     cv2.destroyAllWindows()
 
+
 '''
 Parameters:
     arm_extension_angle: the angle formed by the user's most visible shoulder, elbow, and wrist.
@@ -248,6 +254,22 @@ def classify_arm(arm_extension_angle, arm_elevation_angle):
 
     return arm_color
 
+
+def classify_forearm(shoulder_point, elbow_point, wrist_point):
+
+    forearm_color = COLOR_RED
+
+    forearm_angle = calculate_angle((shoulder_point, elbow_point, wrist_point))
+
+    # evaluate angle
+    if forearm_angle >= FOREARM_ANGLE_GOOD_MIN and forearm_angle <= FOREARM_ANGLE_GOOD_MAX:
+        forearm_color = COLOR_GREEN
+    elif forearm_angle >= FOREARM_ANGLE_MIN and forearm_angle <= FOREARM_ANGLE_MAX:
+        forearm_color = COLOR_YELLOW
+
+    return forearm_color
+
+
 '''
 Parameters:
     incline_angle: the user's angle of incline, taken from the shoulder, hip, and midpoint between the knees.
@@ -266,6 +288,7 @@ def classify_incline_angle(incline_angle):
 
     return incline_color
 
+
 '''
 Parameters:
     shoulder_point, elbow_point, hip_point: 2D points of the respective body parts
@@ -282,9 +305,9 @@ def classify_upper_arm(shoulder_point, elbow_point, hip_point, elbow_shoulder_dx
     if ((shoulder_point[0] < elbow_point[0] and elbow_point[0] < hip_point[0])
     or (hip_point[0] < elbow_point[0] and elbow_point[0] < shoulder_point[0])):
 
-        if elbow_shoulder_dx >= 0.15 * torso_dx and elbow_shoulder_dx <= 0.25 * torso_dx:
+        if elbow_shoulder_dx >= ELBOW_POSITION_GOOD_MIN * torso_dx and elbow_shoulder_dx <= ELBOW_POSITION_GOOD_MAX * torso_dx:
             upper_arm_color = COLOR_GREEN
-        elif elbow_shoulder_dx >= 0.1 * torso_dx and elbow_shoulder_dx <= 0.3 * torso_dx:
+        elif elbow_shoulder_dx >= ELBOW_POSITION_MIN * torso_dx and elbow_shoulder_dx <= ELBOW_POSITION_MAX * torso_dx:
             upper_arm_color = COLOR_YELLOW
         else:
             upper_arm_color = COLOR_RED
